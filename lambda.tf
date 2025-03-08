@@ -1,7 +1,7 @@
 data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/package"
-  output_path = "${path.module}/package.zip"
+  output_path = "${path.module}/package.zip" # <<<
 }
 
 resource "aws_lambda_function" "http_api_lambda" {
@@ -14,7 +14,9 @@ resource "aws_lambda_function" "http_api_lambda" {
   role             = aws_iam_role.lambda_exec.arn
 
   environment {
-    variables = {} # todo: fill with apporpriate value
+    variables = {
+      DDB_TABLE = aws_dynamodb_table.table.name
+    } # todo: fill with apporpriate value
   }
 }
 
@@ -38,14 +40,18 @@ resource "aws_iam_role" "lambda_exec" {
 resource "aws_iam_policy" "lambda_exec_role" {
   name = "${local.name_prefix}-topmovies-api-ddbaccess"
 
+# <<<
   policy = <<POLICY
-{
+  {
     "Version": "2012-10-17",
     "Statement": [
         {
             "Effect": "Allow",
             "Action": [
-                "dynamodb:GetItem"
+                "dynamodb:PutItem",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:DeleteItem"
             ],
             "Resource": "${aws_dynamodb_table.table.arn}"
         },
@@ -59,7 +65,7 @@ resource "aws_iam_policy" "lambda_exec_role" {
             "Resource": "*"
         }
     ]
-}
+  }
 POLICY
 }
 
