@@ -1,12 +1,10 @@
 
 
-
-/* A Route 53 hosted zone (e.g., example.com).
-An ACM certificate in us-east-1 (required for API Gateway).
-A Custom domain for API Gateway (api.example.com).
-A Route 53 alias record pointing to the HTTP API.
- */
-
+# Requirement:
+# A Route 53 hosted zone (e.g., example.com).
+# An ACM certificate in us-east-1 (required for API Gateway).
+#A Custom domain for API Gateway (api.example.com).
+# A Route 53 alias record pointing to the HTTP API.
 
 # Replace with your actual domain
 variable "domain_name" {
@@ -84,10 +82,10 @@ resource "aws_route53_record" "api_record" {
   type    = "A"
 
   alias {
-    name                   = aws_apigatewayv2_domain_name.api_domain.domain_name_configuration[0].target_domain_name
-    zone_id                = aws_apigatewayv2_domain_name.api_domain.domain_name_configuration[0].hosted_zone_id
+    name    = aws_apigatewayv2_domain_name.api_domain.domain_name_configuration[0].target_domain_name
+    zone_id = aws_apigatewayv2_domain_name.api_domain.domain_name_configuration[0].hosted_zone_id
     evaluate_target_health = false
   }
 }
 
-output "DNS" {value = aws_route53_record.api_record.name}
+output "dns" {value = "https://${aws_route53_record.api_record.fqdn}"}

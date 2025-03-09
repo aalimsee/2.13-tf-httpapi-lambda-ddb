@@ -1,13 +1,19 @@
 #!/bin/bash
 
-# Fetch invoke_url from the terraform codes
-INVOKE_URL=$(terraform output -raw invoke_url)
-echo "Using API Gateway URL: $INVOKE_URL"
-
 # Example API request
 # curl -X GET "$INVOKE_URL/resource-path"
 
+# Method 1 (Hard coding)
 # INVOKE_URL=https://ap3xnb99u4.execute-api.us-east-1.amazonaws.com
+
+# Method 2 (API GW URL)
+# Fetch invoke_url from the terraform codes
+# INVOKE_URL=$(terraform output -raw invoke_url)
+# echo "Using API Gateway URL: $INVOKE_URL"
+
+# Method 3 (User Friendly URL)
+INVOKE_URL=$(terraform output -raw dns)
+echo "Using friendly URL for the API Gateway: $INVOKE_URL"
 
 # add movies
 echo "> add movies"
