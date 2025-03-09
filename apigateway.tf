@@ -3,12 +3,82 @@ resource "aws_apigatewayv2_api" "http_api" {
   protocol_type = "HTTP"
 }
 
+# Deploy API GW to default stage
 resource "aws_apigatewayv2_stage" "default" {
   api_id = aws_apigatewayv2_api.http_api.id
 
   name        = "$default"
   auto_deploy = true
+
+    # Access log for API Gateway, with a log retention of 7 days
+    access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
+    format          = jsonencode({
+      requestId       = "$context.requestId"
+      ip              = "$context.identity.sourceIp"
+      requestTime     = "$context.requestTime"
+      httpMethod      = "$context.httpMethod"
+      routeKey        = "$context.routeKey"
+      status          = "$context.status"
+      protocol        = "$context.protocol"
+      responseLength  = "$context.responseLength"
+    })
+  }
 }
+
+
+
+resource "aws_api_gateway_account" "api_logging" {
+  cloudwatch_role_arn = aws_iam_role.apigateway_logging.arn
+}
+
+resource "aws_iam_role" "apigateway_logging" {
+  name = "apigateway_logging_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "apigateway.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_policy" "apigateway_logging_policy" {
+  name        = "apigateway_logging_policy"
+  description = "Policy for API Gateway to write logs to CloudWatch"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "apigateway_logging_attach" {
+  role       = aws_iam_role.apigateway_logging.name
+  policy_arn = aws_iam_policy.apigateway_logging_policy.arn
+}
+
+resource "aws_cloudwatch_log_group" "api_gateway_logs" {
+  name              = "/aws/api-gateway/${local.name_prefix}-topmovies-api"
+  retention_in_days = 7
+}
+
 
 resource "aws_apigatewayv2_integration" "apigw_lambda" {
   api_id = aws_apigatewayv2_api.http_api.id
