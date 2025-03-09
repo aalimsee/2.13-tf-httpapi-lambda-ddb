@@ -1,6 +1,13 @@
 #!/bin/bash
 
-INVOKE_URL=https://ap3xnb99u4.execute-api.us-east-1.amazonaws.com
+# Fetch invoke_url from the terraform codes
+INVOKE_URL=$(terraform output -raw invoke_url)
+echo "Using API Gateway URL: $INVOKE_URL"
+
+# Example API request
+# curl -X GET "$INVOKE_URL/resource-path"
+
+# INVOKE_URL=https://ap3xnb99u4.execute-api.us-east-1.amazonaws.com
 
 # add movies
 echo "> add movies"
